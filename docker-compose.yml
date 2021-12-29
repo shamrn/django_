@@ -1,0 +1,36 @@
+version: '3.9'
+services:
+  nginx:
+    build: ./nginx
+    ports:
+      - 1337:80
+    depends_on:
+      - app
+  db:
+    image: postgres:14.1
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./db:/db
+      - db-data:/var/lib/postgresql/data
+  app:
+    build: .
+    command: gunicorn project.wsgi:application --bind 0.0.0.0:8000
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    environment:
+      - DB_NAME=postgres
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOSTNAME=db
+      - DB_PORT=5432
+    ports:
+      - 8000:8000
+volumes:
+  db-data:
+    driver: local
